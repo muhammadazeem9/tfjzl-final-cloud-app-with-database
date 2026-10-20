@@ -97,7 +97,42 @@ class Enrollment(models.Model):
 
 # One enrollment could have multiple submission
 # One submission could have multiple choices
-# One choice could belong to multiple submissions
-#class Submission(models.Model):
-#    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
-#    choices = models.ManyToManyField(Choice)
+class Question(models.Model):
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE
+    )
+    content = models.CharField(max_length=200)
+    grade = models.IntegerField(default=50)
+
+    # Check whether the learner selected the correct answers
+    def is_get_score(self, selected_ids):
+        correct_ids = set(
+            self.choice_set.filter(is_correct=True)
+            .values_list('id', flat=True)
+        )
+        return correct_ids == set(selected_ids)
+
+    def __str__(self):
+        return "Question: " + self.content
+
+
+class Choice(models.Model):
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE
+    )
+    content = models.CharField(max_length=200)
+    is_correct = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.content
+
+
+class Submission(models.Model):
+    enrollment = models.ForeignKey(
+        Enrollment,
+        on_delete=models.CASCADE
+    )
+    choices = models.ManyToManyField(Choice)
+
